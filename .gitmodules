@@ -1,0 +1,3 @@
+[submodule "Snapshot.ixi"]
+	path = Snapshot.ixi
+	url = https://github.com/iotaledger/Snapshot.ixi
