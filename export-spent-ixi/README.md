@@ -1,4 +1,4 @@
-# Snapshot
+# Spent
 
 Copy or clone source code into your `ixi` directory such that it can be found as `ixi/Spent/{index.js, package.json}`. 
 Your node may be running at this time, and it will hot-load the script. 
