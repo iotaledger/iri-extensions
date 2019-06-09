@@ -8,6 +8,9 @@ After you've cloned it, and with a running iri node, run the following command t
 curl http://localhost:14265 -X POST -H 'X-IOTA-API-Version: 1.4.1' -H 'Content-Type: application/json'   -d '{"command": "Spent.generateSpentAddressesFile"}'
 ```
 
+Generated file will start with the timestamp of generation start.
+Every next line is a human-readable line with the hash of a spent address.
+
 -----
 
 #### Troubleshooting:
