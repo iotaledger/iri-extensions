@@ -46,7 +46,7 @@ function checkChecksumFor(file){
 function updateSpentAddressesWith(file){
 	if (!checkChecksumFor(file)){
 		return {
-			error: "Checksum mismatch for file " + file.getName()
+			"error": "Checksum mismatch for file " + file.getName()
 		}
 	}
 
@@ -95,10 +95,9 @@ function generate(request) {
 		    	log.error("Found a directory called {}, ignoring!");
 		    } else {
 		    	var result = updateSpentAddressesWith(file);
-		    	System.out.println(result)
-		    	if (result.error){
+		    	if (result["error"]){
 		    		errors.push(result["error"]);
-					log.error(error);
+					log.error(result["error"]);
 		    	} else {
 		    		total += result["amount"];
 		    	}
