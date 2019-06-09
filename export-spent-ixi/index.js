@@ -1,21 +1,13 @@
 var System = java.lang.System;
 
 var spentAddressProvider = IOTA.spentAddressesProvider
-var tangle = IOTA.tangle;
-var config = IOTA.configuration;
 
 var iri = com.iota.iri;
 var Callable = iri.service.CallableRequest;
 var Response = iri.service.dto.IXIResponse;
 var ErrorResponse = iri.service.dto.ErrorResponse;
 
-var RocksDBPersistenceProvider = iri.storage.rocksDB.RocksDBPersistenceProvider;
-var SpentAddress = iri.model.persistables.SpentAddress;
-
-var HashFactory = iri.model.HashFactory;
-
 var fileName = "spentAddresses.txt";
-var HashMap = java.util.HashMap;
 
 // Log using logger of the ixi class
 var log = org.slf4j.LoggerFactory.getLogger(iri.IXI.class);
@@ -35,18 +27,26 @@ function generate(request) {
     } else {
     	file.createNewFile();
     }
+    
+    // False for always overwriting
+    var writer = new java.io.FileWriter(file, false); 
 
     var hashes = spentAddressProvider.getAllAddresses();
-    var writer = new java.io.FileWriter(file);
     var separator = System.getProperty("line.separator");
+    
     // Start with the time
     writer.write(System.currentTimeMillis() + separator);
 
+    // Create a digest
+    var digest = java.security.MessageDigest.getInstance("SHA-256");
     for (var i=0; i<hashes.length; i++){
-    	var hash = hashes[i];
+    	var hash = hashes[i].toString();
 
-    	writer.write(hash.toString() + separator);
-
+    	writer.write(hash + separator);
+    	
+    	// Update with hash bytes
+    	digest.update(hash.getBytes());
+    	
     	if (i % 100 === 99) {
     		writer.flush;
     	}
@@ -57,21 +57,9 @@ function generate(request) {
     return Response.create({
 		amount: hashes.length,
 		fileName: fileName,
-		sizeInKb: file.length() / (1024 * 1024),
-		checksum: checksum(file)
+		sizeInKb: new java.lang.Integer(file.length() / (1024 * 1024)),
+		checksum: java.lang.String.format("%064x", new java.math.BigInteger(1, digest.digest()))
 	});
-}
-
-function checksum(file) {
-	var inStream = new java.io.FileInputStream(input);
-    var digest = java.security.MessageDigest.getInstance("sha256");
-    var block = java.lang.reflect.Array.newInstance(java.lang.Byte.TYPE, 1024)
-    var length = inStream.read(block);
-    while (length > 0) {
-        digest.update(block, 0, length);
-        length = inStream.read(block);
-    }
-    return digest.digest();
 }
 
 API.put("generateSpentAddressesFile", new Callable({ call: generate }))
