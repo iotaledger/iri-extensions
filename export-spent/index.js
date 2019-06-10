@@ -51,14 +51,17 @@ function generate(request) {
     		writer.flush;
     	}
     }
+    var checksum = java.lang.String.format("%064x", new java.math.BigInteger(1, digest.digest()));
 
+    // End file with the checksum
+    writer.write(checksum.getBytes());
     writer.close();
 
     return Response.create({
 		amount: hashes.length,
 		fileName: fileName,
 		sizeInKb: new java.lang.Integer(file.length() / (1024 * 1024)),
-		checksum: java.lang.String.format("%064x", new java.math.BigInteger(1, digest.digest()))
+		checksum: checksum
 	});
 }
 
