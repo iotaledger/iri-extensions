@@ -92,7 +92,7 @@ function generate(request) {
 		var file = new java.io.File(fileName);
 	    if (file.exists()){
 	    	if (file.isDirectory()){
-		    	log.error("Found a directory called {}, ignoring!");
+		    	log.error("Found a directory called {}, ignoring!", fileName);
 		    } else {
 		    	var result = updateSpentAddressesWith(file);
 		    	if (result["error"]){
