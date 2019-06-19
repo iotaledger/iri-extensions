@@ -17,23 +17,33 @@ function checkChecksumFor(file){
 
 	var stream = new java.io.FileInputStream(file);
 	var targetReader = new java.io.BufferedReader(new java.io.InputStreamReader(stream));
-	
 	var expectedChecksum;
-	var firstLine = true;
-	while (line = targetReader.readLine()){
-		if (firstLine){
-			firstLine = false;
-		} else if (line.length() === 64){
-			// Checksum
-			expectedChecksum = line;
-		} else {
-			// Hash
-			digest.update(line.getBytes());
-		}
-	}
 
-	targetReader.close();
-	stream.close();
+	try {
+		var firstLine = true;
+		while (line = targetReader.readLine()){
+			if (firstLine){
+				firstLine = false;
+			} else if (line.length() === 64){
+				// Checksum
+				expectedChecksum = line;
+			} else if (line.length() === 81){
+				// Hash
+				digest.update(line.getBytes());
+			} 
+		}
+
+		targetReader.close();
+		stream.close();
+	} catch (error){
+		targetReader.close();
+		stream.close();
+
+		log.error("Caught error during read: {}", error);
+		return false;
+	}
+	
+	
 
 	if (!expectedChecksum){
 		log.error("{} did not have a checksum", file.getName());
@@ -51,22 +61,46 @@ function updateSpentAddressesWith(file){
 	}
 
 	var stream = new java.io.FileInputStream(file);
-	var targetReader = new java.io.InputStreamReader(stream);
-	var expectedChecksum;
-	var firstLine = true;
-	var i=0;
-	while (line = targetReader.readLine()){
-		if (firstLine){
-			log.info("Importing spent addresses from {} generated at {}", file.getName(), java.util.Date(Number(line)));
-		} else if (line.length() === 81){
-			var hash = com.iota.iri.model.HashFactory.ADDRESS.create(line);
-			spentAddressProvider.saveAddress(hash);
-			i++;
+	var targetReader = new java.io.BufferedReader(new java.io.InputStreamReader(stream));
+	var amount;
+
+	try {
+		var firstLine = true;
+		var i=0;
+		while (line = targetReader.readLine()){
+			if (firstLine){
+				log.info("Importing spent addresses from {} generated at {}", file.getName(), new java.util.Date(Number(line)));
+				firstLine = false;
+			} else if (line.length() === 81){
+				var hash = com.iota.iri.model.HashFactory.ADDRESS.create(line);
+				try {
+					spentAddressProvider.saveAddress(hash);
+					i++;
+				} catch (error){
+					log.error("Caught error during saveAddress: {}", error);
+				}
+			} else if (line.length() !== 64) {
+				// This must be the amount
+				amount = Number(line);
+				log.info("Importing {} spent addresses", amount);
+			}
+
+			if (i % ((amount / 10)|0) === 0 && i !== 0){
+				log.info("Importing spent addresses {}%..", (i/amount*100)|0);
+			}
+		}
+	} catch (error){
+		targetReader.close();
+		stream.close();
+
+		log.error("Caught error during read: {}", error);
+		return {
+			error: error
 		}
 	}
 	
 	return {
-		amount: i
+		amount: amount
 	}
 	
 }
@@ -114,4 +148,3 @@ function generate(request) {
 }
 
 API.put("mergeSpentAddresses", new Callable({ call: generate }))
-
