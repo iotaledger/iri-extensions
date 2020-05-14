@@ -3,11 +3,16 @@ var Callable = iri.service.CallableRequest;
 var Response = iri.service.dto.IXIResponse;
 var ErrorResponse = iri.service.dto.ErrorResponse;
 var snapshotProvider  = IOTA.snapshotProvider;
+
 var milestoneSolidifier = IOTA.milestoneSolidifier;
+var latestMilestoneTracker = IOTA.latestMilestoneTracker;
+
+var DELAY = 5;
 
 function getHealth(){
     try {
-        if (snapshotProvider.getLatestSnapshot().getIndex() >= milestoneSolidifier.getLatestMilestoneIndex() - 5) {
+        var latestIndex = latestMilestoneTracker ? latestMilestoneTracker.getLatestMilestoneIndex() : milestoneSolidifier.getLatestMilestoneIndex();
+        if (snapshotProvider.getLatestSnapshot().getIndex() >= latestIndex - DELAY) {
             return Response.create("Node fully synced.");
         } else {
             return ErrorResponse.create("Node not synced.");
